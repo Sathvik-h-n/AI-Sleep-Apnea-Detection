@@ -1,0 +1,5 @@
+pip install pandas 
+pip install matplotlib 
+pip install seaborn 
+pip install scikit-learn==1.0.2 
+pip install flask

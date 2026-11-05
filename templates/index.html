@@ -1,0 +1,9 @@
+<!-- templates/index.html -->
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center mt-4">
+    <h1>Welcome to Sleep Apnea Detection System</h1>
+    <p class="lead">Monitor BPM and SpO₂ in real-time from your MAX30100 sensor connected to an ESP32.</p>
+    <a class="btn btn-primary" href="{{ url_for('login') }}">Get Started</a>
+</div>
+{% endblock %}

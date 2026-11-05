@@ -1,0 +1,57 @@
+<!-- templates/monitor.html -->
+{% extends "base.html" %}
+{% block content %}
+<h2>ESP32 + MAX30100 Live Data (Wired)</h2>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5>BPM:</h5>
+            <div id="bpm" class="reading">--</div>
+            <h5 class="mt-3">SpO₂:</h5>
+            <div id="spo2" class="reading">--</div>
+            <div id="alert" class="mt-3"></div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5>Live ECG-like (raw IR) - simple placeholder</h5>
+            <canvas id="ecg" width="600" height="200" style="width:100%;border:1px solid #ddd"></canvas>
+            <small class="text-muted">(If your ESP sends raw samples, adapt the serial output and front-end to plot
+                them.)</small>
+        </div>
+    </div>
+</div>
+
+<script>
+    const evtSource = new EventSource("/stream");
+
+    evtSource.onmessage = (e) => {
+        try {
+            const payload = JSON.parse(e.data);
+            if (payload.type === "reading") {
+                const rd = payload.reading;
+                document.getElementById("bpm").innerText = rd.bpm.toFixed(2) + " BPM";
+                document.getElementById("spo2").innerText = rd.spo2.toFixed(2) + " %";
+
+                // alert handling
+                const alertDiv = document.getElementById("alert");
+                if (payload.alert && payload.alert.active) {
+                    alertDiv.innerHTML = '<div class="alert alert-danger">ALERT: ' + payload.alert.message + '</div>';
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-success">Status: Normal</div>';
+                }
+                // (EKG plot placeholder left minimal)
+            }
+        } catch (err) {
+            console.error("SSE parse error", err);
+        }
+    };
+
+    evtSource.onerror = (err) => {
+        console.error("EventSource failed:", err);
+    };
+</script>
+
+{% endblock %}

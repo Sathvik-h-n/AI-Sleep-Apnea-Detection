@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Sleep Apnea Monitor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: #f4f4f4;
+        }
+
+        .card {
+            margin-top: 20px;
+            border-radius: 12px;
+        }
+
+        .big-number {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .alert-box {
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <h2 class="text-center">Real-Time Sleep Apnea Monitor</h2>
+
+        <div class="text-end">
+            <a href="/logout" class="btn btn-danger btn-sm">Logout</a>
+        </div>
+
+        <div class="row">
+            <!-- BPM CARD -->
+            <div class="col-md-6">
+                <div class="card p-3 shadow">
+                    <h4>Heart Rate (BPM)</h4>
+                    <div id="bpm" class="big-number text-primary">--</div>
+                </div>
+            </div>
+
+            <!-- SpO2 CARD -->
+            <div class="col-md-6">
+                <div class="card p-3 shadow">
+                    <h4>SpO₂ (%)</h4>
+                    <div id="spo2" class="big-number text-success">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apnea Alert -->
+        <div class="card p-3 shadow mt-4">
+            <h4>Apnea Detection</h4>
+            <div id="apnea_status" class="alert-box text-secondary">No Data</div>
+        </div>
+
+        <!-- ECG-like graph -->
+        <div class="card p-3 shadow mt-4">
+            <h4>Pulse Waveform</h4>
+            <canvas id="ecgChart" height="150"></canvas>
+        </div>
+
+    </div>
+
+    <script>
+        let ecgChart;
+        let ecgData = [];
+
+        function setupChart() {
+            const ctx = document.getElementById("ecgChart").getContext("2d");
+            ecgChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: Array(300).fill(""),
+                    datasets: [{
+                        label: "IR Signal",
+                        data: ecgData,
+                        borderColor: "blue",
+                        borderWidth: 2,
+                        tension: 0.2,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    animation: false,
+                    responsive: true,
+                    scales: {
+                        y: { min: 0, max: 100000 }
+                    }
+                }
+            });
+        }
+
+
+        // Fetch live BPM + SpO2 + apnea
+        setInterval(() => {
+            fetch("/api/live")
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById("bpm").innerHTML = data.bpm;
+                    document.getElementById("spo2").innerHTML = data.spo2;
+
+                    let a = document.getElementById("apnea_status");
+
+                    if (data.apnea === "none") {
+                        a.innerHTML = "Normal";
+                        a.style.color = "black";
+                    }
+                    else if (data.apnea === "mild") {
+                        a.innerHTML = "Possible Apnea – Mild";
+                        a.style.color = "orange";
+                    }
+                    else if (data.apnea === "severe") {
+                        a.innerHTML = "Severe Apnea Detected!";
+                        a.style.color = "red";
+                    }
+                });
+        }, 700);
+
+
+        // Fetch ECG waveform
+        setInterval(() => {
+            fetch("/api/ecg")
+                .then(res => res.json())
+                .then(arr => {
+                    ecgChart.data.datasets[0].data = arr;
+                    ecgChart.update();
+                });
+        }, 150);
+
+        // Init
+        setupChart();
+    </script>
+
+</body>
+
+</html>

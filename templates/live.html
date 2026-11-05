@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ESP32 + MAX30100 Live</title>
+    <script>
+        async function fetchData() {
+            let res = await fetch("/data");
+            let d = await res.json();
+            document.getElementById("bpm").innerText = d.bpm.toFixed(2);
+            document.getElementById("spo2").innerText = d.spo2.toFixed(2);
+        }
+        setInterval(fetchData, 1000);
+    </script>
+</head>
+
+<body>
+    <h1>ESP32 + MAX30100 Live Data (WIRED)</h1>
+    <h2>BPM: <span id="bpm">0</span></h2>
+    <h2>SpO₂: <span id="spo2">0</span></h2>
+</body>
+
+</html>
